@@ -1,26 +1,33 @@
 #ifndef TREE_H
 #define TREE_H
+/************************基本的二叉树，此创建二叉树要按照前序(或中序后序)按顺序输入二叉树***************************/
 #include<iostream>
 #include<stack>
 #include<queue>
+using namespace std;
 template <typename T>
 struct BiTnode       //树的链式存储结构，表式树的一个结点，一个数据域，两个指针域
 {
 	T  element;
 	BiTnode<T> * lchild, *rchild;
 };
+template<typename T>                          //作为一个函数指针传入遍历函数中
+void visit(BiTnode<T>* &node)
+{
+	cout << node->element << "    ";
+}
 template <typename T>
 struct BiTNodePost                            //非递归后序遍历结构
 {
 	BiTnode<T> * biTree;
 	char tag;
 };
-using namespace std;
+
 template<typename T>
 class BiTree
 {
 public:
-	BiTree()  { root = NULL; Treesize = 0; }
+	 BiTree()  { root = NULL; Treesize = 0; }
 	~BiTree() { erase(root); }
 
 	void CreateBiTree(BiTnode <T>* &node);
@@ -35,10 +42,10 @@ public:
 	void inOrder(BiTnode <T>* &node);
 	void postOrder(BiTnode <T>* &node);
 	//非递归遍历方法
-	void preOrderstack(BiTnode<T>* node);
-	void inOrderstack(BiTnode <T>* node);
-	void postOrderstack(BiTnode<T>* node);
-	void levelOrderqueue(BiTnode<T>* node);
+	void preOrderstack(BiTnode<T>* node, void(*visit)(BiTnode<T>* &)); //传入了一个函数指针
+	void inOrderstack(BiTnode <T>* node, void(*visit)(BiTnode<T>* &));
+	void postOrderstack(BiTnode<T>* node, void(*visit)(BiTnode<T>* &));
+	void levelOrderqueue(BiTnode<T>* node, void(*visit)(BiTnode<T>* &));
 	//遍历时对每个节点的操作
 	void  operator_(BiTnode<T>* &node);
 	//深度
@@ -86,7 +93,7 @@ void BiTree<T>::erase(BiTnode <T>* &node)
 }
 /***********************************此处操作只是简单打印结点的元素,当然也可以对其树的结点进行修改,注意参数是传值还是传址或传引用***********************************/
 template<typename T>
-void   BiTree<T>::operator_(BiTnode<T>* &node)
+void  BiTree<T>::operator_(BiTnode<T>* &node)
 {
 	cout << node->element << "    ";
 }
@@ -125,7 +132,7 @@ void BiTree<T>::postOrder(BiTnode <T>* &node)
 
 /*******************************非递归层序，前序，中序，后序遍历**************************************/
 template<typename T>
-void BiTree<T>::preOrderstack(BiTnode<T>* node)
+void BiTree<T>::preOrderstack(BiTnode<T>* node, void(*visit)(BiTnode<T>* &))
 {
 	stack<BiTnode<T> *> s;
 	BiTnode<T> * p = node;                          //p是遍历指针
@@ -134,7 +141,7 @@ void BiTree<T>::preOrderstack(BiTnode<T>* node)
 		if (p != NULL)
 		{
 			s.push(p);
-			operator_(p);
+			visit(p);
 			p = p->lchild;
 		}
 
@@ -148,7 +155,7 @@ void BiTree<T>::preOrderstack(BiTnode<T>* node)
 
 }
 template<typename T>
-void BiTree<T>::inOrderstack(BiTnode<T> * node)
+void BiTree<T>::inOrderstack(BiTnode<T> * node, void(*visit)(BiTnode<T>* &))
 {
 	stack<BiTnode<T> *> s;
 	BiTnode<T> * p = node;
@@ -162,7 +169,7 @@ void BiTree<T>::inOrderstack(BiTnode<T> * node)
 		else
 		{
 			p = s.top();
-			operator_(p);      //对树中的结点进行操作
+			visit(p);      //对树中的结点进行操作
 			s.pop();
 			p = p->rchild;
 		}
@@ -170,7 +177,7 @@ void BiTree<T>::inOrderstack(BiTnode<T> * node)
 }
 
 template<typename T>
-void BiTree<T>::postOrderstack(BiTnode<T> * node)
+void BiTree<T>::postOrderstack(BiTnode<T> * node, void(*visit)(BiTnode<T>* &))
 {
 	stack<BiTNodePost <T>*>s;
 	BiTnode<T> * p = node;
@@ -190,7 +197,7 @@ void BiTree<T>::postOrderstack(BiTnode<T> * node)
 		while (!s.empty() && (s.top())->tag == 'R')
 		{
 			BT = s.top();
-			operator_(BT->biTree);
+			visit(BT->biTree);
 			s.pop();
 		}
 		//遍历右子树
@@ -205,7 +212,7 @@ void BiTree<T>::postOrderstack(BiTnode<T> * node)
 }
 
 template<typename T>
-void BiTree<T>::levelOrderqueue(BiTnode<T> * node)
+void BiTree<T>::levelOrderqueue(BiTnode<T> * node, void(*visit)(BiTnode<T>* &))
 {
 	queue<BiTnode <T>*> q;           //此处为队列
 	BiTnode<T> * p = node;
@@ -213,7 +220,7 @@ void BiTree<T>::levelOrderqueue(BiTnode<T> * node)
 	while (!q.empty())
 	{
 		p = q.front();
-		operator_(p);
+		visit(p);
 		q.pop();
 		if (p->lchild != NULL)
 			q.push(p->lchild);
